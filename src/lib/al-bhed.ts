@@ -1,5 +1,15 @@
 export type Direction = "en-to-ab" | "ab-to-en"
 
+export type TranslateOptions = {
+  /**
+   * When true, any word that starts with an uppercase letter and is at least 2 chars long
+   * is left untranslated — useful for proper nouns like Tidus, Yuna, Spira.
+   * Words wrapped in [square brackets] are always preserved (with brackets stripped),
+   * regardless of this flag.
+   */
+  preserveProperNouns?: boolean
+}
+
 const EN_TO_AB = "ypltavkrezgmshubxncdijfqow"
 
 const AB_TO_EN: string = (() => {
@@ -11,7 +21,7 @@ const AB_TO_EN: string = (() => {
   return out.join("")
 })()
 
-function translate(text: string, map: string): string {
+function applyCipher(text: string, map: string): string {
   let result = ""
   for (let i = 0; i < text.length; i++) {
     const code = text.charCodeAt(i)
@@ -27,15 +37,43 @@ function translate(text: string, map: string): string {
 }
 
 export function toAlBhed(text: string): string {
-  return translate(text, EN_TO_AB)
+  return applyCipher(text, EN_TO_AB)
 }
 
 export function toEnglish(text: string): string {
-  return translate(text, AB_TO_EN)
+  return applyCipher(text, AB_TO_EN)
 }
 
-export function translateText(text: string, direction: Direction): string {
-  return direction === "en-to-ab" ? toAlBhed(text) : toEnglish(text)
+const TOKEN_RX = /(\[[^\]\n]*\])|([A-Za-z]+(?:['’][A-Za-z]+)?)|([^A-Za-z]+)/g
+
+function isLikelyProperNoun(word: string): boolean {
+  if (word.length < 2) return false
+  const c = word.charCodeAt(0)
+  return c >= 65 && c <= 90
+}
+
+export function translateText(
+  text: string,
+  direction: Direction,
+  opts: TranslateOptions = {},
+): string {
+  const preserveNouns = opts.preserveProperNouns ?? false
+  if (!preserveNouns && !text.includes("[")) {
+    return direction === "en-to-ab" ? toAlBhed(text) : toEnglish(text)
+  }
+  const map = direction === "en-to-ab" ? EN_TO_AB : AB_TO_EN
+  let out = ""
+  for (const m of text.matchAll(TOKEN_RX)) {
+    const [, bracketed, word, other] = m
+    if (bracketed !== undefined) {
+      out += bracketed.slice(1, -1)
+    } else if (word !== undefined) {
+      out += preserveNouns && isLikelyProperNoun(word) ? word : applyCipher(word, map)
+    } else if (other !== undefined) {
+      out += other
+    }
+  }
+  return out
 }
 
 export function cipherTable(): Array<{ english: string; alBhed: string }> {

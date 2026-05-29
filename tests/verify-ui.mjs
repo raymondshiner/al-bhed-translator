@@ -61,6 +61,37 @@ async function verify(label, ctx, viewport) {
   const chipResult = await page.getByRole('textbox', { name: 'Al Bhed output' }).inputValue()
   record(`${label}/phrase chip I am Al Bhed!`, chipResult === 'E ys Ym Prat!', `got "${chipResult}"`)
 
+  // 6b) proper-noun: brackets always preserve, regardless of toggle
+  await step('bracket preserves', async () => {
+    await sourceArea.fill('[Tidus] is here.')
+    await page.waitForTimeout(80)
+    const v = await targetArea.inputValue()
+    if (v !== 'Tidus ec rana.') throw new Error(`got "${v}"`)
+    record(`${label}/bracket preserves Tidus`, true)
+  })
+
+  // 6c) toggle "Preserve names" on, then capitalized words are preserved
+  await step('toggle preserves names', async () => {
+    await page.getByLabel('Preserve proper nouns').click() // turn ON
+    await page.waitForTimeout(80)
+    await sourceArea.fill('hello Tidus, where is Yuna?')
+    await page.waitForTimeout(80)
+    const v = await targetArea.inputValue()
+    if (v !== 'rammu Tidus, frana ec Yuna?') throw new Error(`got "${v}"`)
+    record(`${label}/preserve-names ON skips Tidus/Yuna`, true)
+  })
+
+  // 6d) toggle off → normal full translation resumes
+  await step('toggle off restores full translation', async () => {
+    await page.getByLabel('Preserve proper nouns').click() // OFF
+    await page.waitForTimeout(80)
+    await sourceArea.fill('Hello Tidus')
+    await page.waitForTimeout(80)
+    const v = await targetArea.inputValue()
+    if (v !== 'Rammu Detic') throw new Error(`got "${v}"`)
+    record(`${label}/preserve-names OFF translates everything`, true)
+  })
+
   // 7) Cipher tab — verify all 26 letters rendered
   await page.getByRole('tab', { name: 'Cipher' }).click()
   await page.waitForTimeout(150)

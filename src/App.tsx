@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { BookText, GraduationCap, Languages, ScrollText } from "lucide-react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -13,12 +13,29 @@ import type { Direction } from "@/lib/al-bhed"
 
 type Tab = "translate" | "learn" | "cipher" | "dictionary"
 
+const PRESERVE_KEY = "al-bhed:preserve-names"
+
 function App() {
   const [direction, setDirection] = useState<Direction>("en-to-ab")
   const [source, setSource] = useState("")
   const [tab, setTab] = useState<Tab>("translate")
+  const [preserveProperNouns, setPreserveProperNouns] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(PRESERVE_KEY) === "1"
+    } catch {
+      return false
+    }
+  })
 
   useShareHashOnMount(setSource, setDirection)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(PRESERVE_KEY, preserveProperNouns ? "1" : "0")
+    } catch {
+      /* storage disabled (private mode, etc.) — fine to swallow */
+    }
+  }, [preserveProperNouns])
 
   const loadFromDictionary = (englishText: string) => {
     setDirection("en-to-ab")
@@ -32,20 +49,20 @@ function App() {
         <AppHeader />
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-4 h-auto p-1">
-            <TabsTrigger value="translate" className="flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 sm:py-1.5 text-xs sm:text-sm">
+          <TabsList className="grid w-full grid-cols-4 h-14 sm:h-10 p-1">
+            <TabsTrigger value="translate" className="h-full flex-col sm:flex-row gap-0.5 sm:gap-1.5 text-[11px] sm:text-sm">
               <Languages className="h-4 w-4" />
               <span>Translate</span>
             </TabsTrigger>
-            <TabsTrigger value="learn" className="flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 sm:py-1.5 text-xs sm:text-sm">
+            <TabsTrigger value="learn" className="h-full flex-col sm:flex-row gap-0.5 sm:gap-1.5 text-[11px] sm:text-sm">
               <GraduationCap className="h-4 w-4" />
               <span>Learn</span>
             </TabsTrigger>
-            <TabsTrigger value="cipher" className="flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 sm:py-1.5 text-xs sm:text-sm">
+            <TabsTrigger value="cipher" className="h-full flex-col sm:flex-row gap-0.5 sm:gap-1.5 text-[11px] sm:text-sm">
               <ScrollText className="h-4 w-4" />
               <span>Cipher</span>
             </TabsTrigger>
-            <TabsTrigger value="dictionary" className="flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 sm:py-1.5 text-xs sm:text-sm">
+            <TabsTrigger value="dictionary" className="h-full flex-col sm:flex-row gap-0.5 sm:gap-1.5 text-[11px] sm:text-sm">
               <BookText className="h-4 w-4" />
               <span>Dictionary</span>
             </TabsTrigger>
@@ -55,8 +72,10 @@ function App() {
             <Translator
               direction={direction}
               source={source}
+              preserveProperNouns={preserveProperNouns}
               onDirectionChange={setDirection}
               onSourceChange={setSource}
+              onPreserveProperNounsChange={setPreserveProperNouns}
             />
           </TabsContent>
           <TabsContent value="learn" className="focus-visible:outline-none">

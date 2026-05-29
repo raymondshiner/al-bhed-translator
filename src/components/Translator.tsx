@@ -1,10 +1,11 @@
 import { useEffect, useMemo } from "react"
-import { ArrowLeftRight, Copy, Eraser, Link as LinkIcon, Sparkles } from "lucide-react"
+import { ArrowLeftRight, Copy, Eraser, Info, Link as LinkIcon, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import {
@@ -16,8 +17,10 @@ import {
 type Props = {
   direction: Direction
   source: string
+  preserveProperNouns: boolean
   onDirectionChange: (d: Direction) => void
   onSourceChange: (s: string) => void
+  onPreserveProperNounsChange: (v: boolean) => void
 }
 
 function labels(direction: Direction) {
@@ -26,8 +29,18 @@ function labels(direction: Direction) {
     : { from: "Al Bhed", to: "English", fromColor: "text-[var(--color-cipher)]", toColor: "text-foreground" }
 }
 
-export function Translator({ direction, source, onDirectionChange, onSourceChange }: Props) {
-  const target = useMemo(() => translateText(source, direction), [source, direction])
+export function Translator({
+  direction,
+  source,
+  preserveProperNouns,
+  onDirectionChange,
+  onSourceChange,
+  onPreserveProperNounsChange,
+}: Props) {
+  const target = useMemo(
+    () => translateText(source, direction, { preserveProperNouns }),
+    [source, direction, preserveProperNouns],
+  )
   const { from, to, fromColor, toColor } = labels(direction)
 
   const swap = () => {
@@ -189,25 +202,53 @@ export function Translator({ direction, source, onDirectionChange, onSourceChang
         </Card>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
-            <Sparkles className="h-3.5 w-3.5" /> Try:
-          </span>
-          {CANON_PHRASES.slice(0, 6).map((p) => (
-            <button
-              key={p.en}
-              onClick={() => loadPhrase(p.en)}
-              className="text-xs rounded-full border border-border bg-card/60 px-3 py-1 hover:bg-card hover:border-[var(--color-gold)]/40 transition-colors"
-            >
-              {p.label}
-            </button>
-          ))}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-lg border border-border bg-card/40 px-3 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <Switch
+            id="preserve-names"
+            checked={preserveProperNouns}
+            onCheckedChange={onPreserveProperNounsChange}
+            aria-label="Preserve proper nouns"
+          />
+          <label htmlFor="preserve-names" className="text-sm font-medium cursor-pointer select-none">
+            Preserve names
+          </label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                aria-label="About name preservation"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Info className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs text-xs leading-relaxed">
+              When on, capitalized words 2+ letters long are left untranslated
+              (Tidus, Yuna, Spira). Wrap anything in [square brackets] to always
+              preserve it — brackets are stripped from the output.
+            </TooltipContent>
+          </Tooltip>
         </div>
         <Button variant="outline" size="sm" onClick={share} disabled={!source}>
           <LinkIcon className="h-4 w-4 mr-1.5" />
           Share link
         </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+          <Sparkles className="h-3.5 w-3.5" /> Try:
+        </span>
+        {CANON_PHRASES.slice(0, 6).map((p) => (
+          <button
+            key={p.en}
+            onClick={() => loadPhrase(p.en)}
+            className="text-xs rounded-full border border-border bg-card/60 px-3 py-1 hover:bg-card hover:border-[var(--color-gold)]/40 transition-colors"
+          >
+            {p.label}
+          </button>
+        ))}
       </div>
     </div>
   )
