@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://al-bhed-translator.vercel.app/sitemap.xml
+Sitemap: https://albhed.raymondshiner.com/sitemap.xml
