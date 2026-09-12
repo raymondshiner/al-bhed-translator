@@ -23,14 +23,14 @@ npm run preview  # serve dist/ locally
 
 ## Deploy
 
-`vercel.json` is included for one-step Vercel deploys.
+Deployed to Cloudflare Pages at [albhed.shiner.app](https://albhed.shiner.app).
 
 ```bash
-vercel        # preview deploy
-vercel --prod # production deploy
+npm run build
+npx wrangler pages deploy dist --project-name albhed --branch main
 ```
 
-The build output is a static SPA, so any static host works (Cloudflare Pages, Netlify, GitHub Pages with SPA rewrites).
+The build output is a static SPA, so any static host works (Netlify, GitHub Pages with SPA rewrites, Vercel).
 
 ## Credits
 
