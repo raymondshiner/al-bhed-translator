@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://albhed.raymondshiner.com/sitemap.xml
+Sitemap: https://albhed.shiner.app/sitemap.xml
